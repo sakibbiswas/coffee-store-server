@@ -28,6 +28,60 @@ async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
+        const database = client.db("coffeeDB");
+        const coffecolection = database.collection("coffee")
+
+
+        app.post('/coffee', async (req, res) => {
+            const Newcoffee = req.body;
+            console.log(Newcoffee);
+            const result = await coffecolection.insertOne(Newcoffee);
+            res.send(result)
+        })
+        app.put('/coffee/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatedcoffee = req.body
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true }
+            const coffee = {
+                $set: {
+                    name: updatedcoffee.name,
+                    quantity: updatedcoffee.quantity,
+                    Supplier: updatedcoffee.Supplier,
+                    Taste: updatedcoffee.Taste,
+                    Category: updatedcoffee.Category,
+                    Details: updatedcoffee.Details,
+                    photourl: updatedcoffee.photourl,
+
+                },
+            };
+            const result = await coffecolection.updateOne(filter, coffee, options);
+            res.send(result)
+
+        })
+
+        app.get('/coffee', async (req, res) => {
+            const cursor = coffecolection.find();
+            const result = await cursor.toArray()
+            res.send(result)
+
+        })
+
+        app.get('/coffee/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await coffecolection.findOne(query);
+            res.send(result);
+        })
+
+        app.delete('/coffee/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log('please delete from database', id);
+            const query = { _id: new ObjectId(id) };
+            const result = await coffecolection.deleteOne(query);
+            res.send(result)
+        })
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
